@@ -19,6 +19,8 @@ COPY --from=build /app/packages/shared/package.json packages/shared/
 COPY --from=build /app/packages/shared/dist packages/shared/dist
 COPY --from=build /app/packages/homepage-api/package.json packages/homepage-api/
 COPY --from=build /app/packages/homepage-api/dist packages/homepage-api/dist
+# 复制套利看板静态页面
+COPY arb-dashboard.html ./arb-dashboard.html
 
 RUN pnpm install --frozen-lockfile --prod
 
