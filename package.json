@@ -1,0 +1,41 @@
+{
+  "name": "prediction-market-ingestion",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Real-time prediction market data ingestion from Kalshi and Polymarket",
+  "scripts": {
+    "build": "pnpm -r build",
+    "dev:kalshi": "pnpm --filter @prediction-market/kalshi-listener dev",
+    "dev:polymarket": "pnpm --filter @prediction-market/polymarket-listener dev",
+    "start:kalshi": "pnpm --filter @prediction-market/kalshi-listener start",
+    "start:polymarket": "pnpm --filter @prediction-market/polymarket-listener start",
+    "dev:opinion": "pnpm --filter @prediction-market/opinion-listener dev",
+    "start:opinion": "pnpm --filter @prediction-market/opinion-listener start",
+    "dev:predict": "pnpm --filter @prediction-market/predict-listener dev",
+    "start:predict": "pnpm --filter @prediction-market/predict-listener start",
+    "dev:homepage-api": "pnpm --filter @prediction-market/homepage-api dev",
+    "start:homepage-api": "pnpm --filter @prediction-market/homepage-api start",
+    "dev:event-matcher": "pnpm --filter @prediction-market/event-matcher dev",
+    "start:event-matcher": "pnpm --filter @prediction-market/event-matcher start",
+    "lint": "pnpm -r lint",
+    "test": "pnpm -r test",
+    "typecheck": "pnpm -r typecheck"
+  },
+  "devDependencies": {
+    "@types/node": "^20.10.0",
+    "tsx": "^4.21.0",
+    "typescript": "^5.3.0"
+  },
+  "engines": {
+    "node": ">=20.0.0",
+    "pnpm": ">=8.0.0"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "esbuild"
+    ]
+  },
+  "dependencies": {
+    "ethers": "^6.16.0"
+  }
+}

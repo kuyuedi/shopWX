@@ -1,0 +1,230 @@
+version: '3.8'
+
+services:
+  kalshi-listener:
+    build:
+      context: .
+      dockerfile: packages/kalshi-listener/Dockerfile
+    container_name: kalshi-listener
+    environment:
+      - DATABASE_URL=${DATABASE_URL}
+      - DB_SCHEMA=${DB_SCHEMA:-direct_exchanges_data}
+      - KALSHI_API_KEY=${KALSHI_API_KEY:-}
+      - KALSHI_PRIVATE_KEY_PATH=/app/secrets/private_key.txt
+      - KALSHI_WS_URL=${KALSHI_WS_URL:-wss://api.elections.kalshi.com/trade-api/ws/v2}
+      - KALSHI_REST_URL=${KALSHI_REST_URL:-https://api.elections.kalshi.com/trade-api/v2}
+      - LOG_LEVEL=${LOG_LEVEL:-info}
+      - BATCH_SIZE=${BATCH_SIZE:-100}
+      - BATCH_INTERVAL_MS=${BATCH_INTERVAL_MS:-1000}
+      - MARKET_REFRESH_INTERVAL_MS=${MARKET_REFRESH_INTERVAL_MS:-300000}
+      - DB_MAX_CONNECTIONS=5
+      - DB_CONNECTION_TIMEOUT_MS=60000
+      - DB_IDLE_TIMEOUT_MS=60000
+      - WS_SUBSCRIPTION_BATCH_SIZE=250
+      - WS_SUBSCRIPTION_DELAY_MS=100
+      - KALSHI_MARKETS_PER_SOCKET=${KALSHI_MARKETS_PER_SOCKET:-2000}
+      - ENABLE_QUOTE_WRITES=${ENABLE_QUOTE_WRITES:-false}
+      - CLEANUP_INTERVAL_MS=${CLEANUP_INTERVAL_MS:-3600000}
+      - CLEANUP_RETENTION_MS=${CLEANUP_RETENTION_MS:-86400000}
+    volumes:
+      - ./secrets/private_key.txt:/app/secrets/private_key.txt:ro
+    restart: unless-stopped
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+  polymarket-listener:
+    build:
+      context: .
+      dockerfile: packages/polymarket-listener/Dockerfile
+    container_name: polymarket-listener
+    environment:
+      - DATABASE_URL=${DATABASE_URL}
+      - DB_SCHEMA=${DB_SCHEMA:-direct_exchanges_data}
+      - POLYMARKET_WS_URL=${POLYMARKET_WS_URL:-wss://ws-subscriptions-clob.polymarket.com/ws/market}
+      - POLYMARKET_GAMMA_URL=${POLYMARKET_GAMMA_URL:-https://gamma-api.polymarket.com}
+      - LOG_LEVEL=${LOG_LEVEL:-info}
+      - BATCH_SIZE=${BATCH_SIZE:-100}
+      - BATCH_INTERVAL_MS=${BATCH_INTERVAL_MS:-1000}
+      - MARKET_REFRESH_INTERVAL_MS=${MARKET_REFRESH_INTERVAL_MS:-300000}
+      - MARKETS_PER_SOCKET=${MARKETS_PER_SOCKET:-500}
+      - DB_MAX_CONNECTIONS=5
+      - DB_CONNECTION_TIMEOUT_MS=60000
+      - DB_IDLE_TIMEOUT_MS=60000
+      - ENABLE_QUOTE_WRITES=${ENABLE_QUOTE_WRITES:-false}
+      - CLEANUP_INTERVAL_MS=${CLEANUP_INTERVAL_MS:-3600000}
+      - CLEANUP_RETENTION_MS=${CLEANUP_RETENTION_MS:-86400000}
+    restart: unless-stopped
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+  opinion-listener:
+    build:
+      context: .
+      dockerfile: packages/opinion-listener/Dockerfile
+    container_name: opinion-listener
+    environment:
+      - DATABASE_URL=${DATABASE_URL}
+      - DB_SCHEMA=${DB_SCHEMA:-direct_exchanges_data}
+      - OPINION_API_KEY=${OPINION_API_KEY:-}
+      - OPINION_WS_URL=${OPINION_WS_URL:-wss://ws.opinion.trade}
+      - OPINION_REST_URL=${OPINION_REST_URL:-https://openapi.opinion.trade/openapi}
+      - OPINION_MARKETS_PER_SOCKET=${OPINION_MARKETS_PER_SOCKET:-200}
+      - LOG_LEVEL=${LOG_LEVEL:-info}
+      - BATCH_SIZE=${BATCH_SIZE:-100}
+      - BATCH_INTERVAL_MS=${BATCH_INTERVAL_MS:-1000}
+      - MARKET_REFRESH_INTERVAL_MS=${MARKET_REFRESH_INTERVAL_MS:-300000}
+      - DB_MAX_CONNECTIONS=5
+      - DB_CONNECTION_TIMEOUT_MS=60000
+      - DB_IDLE_TIMEOUT_MS=60000
+      - CLEANUP_INTERVAL_MS=${CLEANUP_INTERVAL_MS:-3600000}
+      - CLEANUP_RETENTION_MS=${CLEANUP_RETENTION_MS:-86400000}
+    restart: unless-stopped
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+  predict-listener:
+    build:
+      context: .
+      dockerfile: packages/predict-listener/Dockerfile
+    container_name: predict-listener
+    profiles:
+      - predict
+    environment:
+      - DATABASE_URL=${DATABASE_URL}
+      - DB_SCHEMA=${DB_SCHEMA:-direct_exchanges_data}
+      - PREDICT_API_KEY=${PREDICT_API_KEY:-}
+      - PREDICT_WS_URL=${PREDICT_WS_URL:-wss://ws.predict.fun/ws}
+      - PREDICT_REST_URL=${PREDICT_REST_URL:-https://api.predict.fun}
+      - PREDICT_MARKETS_PER_SOCKET=${PREDICT_MARKETS_PER_SOCKET:-500}
+      - ENABLE_CROSS_MAPPING=${ENABLE_CROSS_MAPPING:-true}
+      - LOG_LEVEL=${LOG_LEVEL:-info}
+      - BATCH_SIZE=${BATCH_SIZE:-100}
+      - BATCH_INTERVAL_MS=${BATCH_INTERVAL_MS:-1000}
+      - MARKET_REFRESH_INTERVAL_MS=${MARKET_REFRESH_INTERVAL_MS:-300000}
+      - DB_MAX_CONNECTIONS=5
+      - DB_CONNECTION_TIMEOUT_MS=60000
+      - DB_IDLE_TIMEOUT_MS=60000
+      - CLEANUP_INTERVAL_MS=${CLEANUP_INTERVAL_MS:-3600000}
+      - CLEANUP_RETENTION_MS=${CLEANUP_RETENTION_MS:-86400000}
+    restart: unless-stopped
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+  homepage-api:
+    build:
+      context: .
+      dockerfile: packages/homepage-api/Dockerfile
+    container_name: homepage-api
+    environment:
+      - DATABASE_URL=${DATABASE_URL}
+      - DB_SCHEMA=${DB_SCHEMA:-direct_exchanges_data}
+      - PORT=${HOMEPAGE_API_PORT:-3100}
+      - HOST=0.0.0.0
+      - SCORE_INTERVAL_MS=${SCORE_INTERVAL_MS:-30000}
+      - LOG_LEVEL=${LOG_LEVEL:-info}
+      - DB_MAX_CONNECTIONS=5
+      - DB_CONNECTION_TIMEOUT_MS=60000
+      - DB_IDLE_TIMEOUT_MS=60000
+      - KALSHI_API_KEY=${KALSHI_API_KEY:-}
+      - KALSHI_PRIVATE_KEY_PATH=/app/secrets/private_key.txt
+      - KALSHI_REST_URL=${KALSHI_REST_URL:-https://api.elections.kalshi.com/trade-api/v2}
+      - POLYMARKET_CLOB_URL=${POLYMARKET_CLOB_URL:-https://clob.polymarket.com}
+      - POLYMARKET_API_KEY=${POLYMARKET_API_KEY:-}
+      - POLYMARKET_API_SECRET=${POLYMARKET_API_SECRET:-}
+      - POLYMARKET_API_PASSPHRASE=${POLYMARKET_API_PASSPHRASE:-}
+      - POLYMARKET_PRIVATE_KEY=${POLYMARKET_PRIVATE_KEY:-}
+      - PREDICT_REST_URL=${PREDICT_REST_URL:-https://api.predict.fun}
+      - PREDICT_API_KEY=${PREDICT_API_KEY:-}
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - TRANSLATION_MODEL=${TRANSLATION_MODEL:-gpt-4o-mini}
+    volumes:
+      - ./secrets/private_key.txt:/app/secrets/private_key.txt:ro
+    ports:
+      - "${HOMEPAGE_API_PORT:-3100}:${HOMEPAGE_API_PORT:-3100}"
+    restart: unless-stopped
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  event-matcher:
+    build:
+      context: .
+      dockerfile: packages/event-matcher/Dockerfile
+    container_name: event-matcher
+    environment:
+      - DATABASE_URL=${DATABASE_URL}
+      - DB_SCHEMA=${DB_SCHEMA:-direct_exchanges_data}
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - OPENAI_MODEL=${OPENAI_MODEL:-gpt-5-nano}
+      - OPENAI_RATE_LIMIT_RPM=${OPENAI_RATE_LIMIT_RPM:-500}
+      - OPENAI_RATE_LIMIT_TPM=${OPENAI_RATE_LIMIT_TPM:-200000}
+      - MATCHER_INTERVAL_MS=${MATCHER_INTERVAL_MS:-300000}
+      - MATCHER_CONFIDENCE_THRESHOLD=${MATCHER_CONFIDENCE_THRESHOLD:-0.85}
+      - MATCHER_CANDIDATES_PER_BATCH=${MATCHER_CANDIDATES_PER_BATCH:-10}
+      - MATCHER_MATCH_VERSION=${MATCHER_MATCH_VERSION:-1}
+      - MATCHER_MIN_EVENT_VOLUME=${MATCHER_MIN_EVENT_VOLUME:-0}
+      - ENABLE_PHASE2=${ENABLE_PHASE2:-true}
+      - ENABLE_PREDICT_AI_MATCHING=${ENABLE_PREDICT_AI_MATCHING:-true}
+      - LOG_LEVEL=${LOG_LEVEL:-info}
+      - DB_MAX_CONNECTIONS=3
+    restart: unless-stopped
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: pgadmin
+    environment:
+      - PGADMIN_DEFAULT_EMAIL=${PGADMIN_EMAIL:-admin@admin.com}
+      - PGADMIN_DEFAULT_PASSWORD=${PGADMIN_PASSWORD:-admin}
+      - PGADMIN_CONFIG_SERVER_MODE=False
+    ports:
+      - "5433:80"
+    volumes:
+      - pgadmin_data:/var/lib/pgadmin
+    restart: unless-stopped
+    profiles:
+      - admin
+
+  healthcheck:
+    build:
+      context: .
+      dockerfile: packages/healthcheck/Dockerfile
+    container_name: healthcheck
+    environment:
+      - DATABASE_URL=${DATABASE_URL}
+      - DB_SCHEMA=${DB_SCHEMA:-direct_exchanges_data}
+      - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}
+      - TELEGRAM_CHAT_ID=${TELEGRAM_CHAT_ID}
+      - HEALTHCHECK_INTERVAL_MS=${HEALTHCHECK_INTERVAL_MS:-60000}
+      - DISK_WARNING_THRESHOLD=${DISK_WARNING_THRESHOLD:-70}
+      - DISK_CRITICAL_THRESHOLD=${DISK_CRITICAL_THRESHOLD:-85}
+      - DATA_FLOW_MIN_RECORDS=${DATA_FLOW_MIN_RECORDS:-100}
+      - DATA_FLOW_CHECK_MINUTES=${DATA_FLOW_CHECK_MINUTES:-5}
+      - ALERT_COOLDOWN_MS=${ALERT_COOLDOWN_MS:-300000}
+      - SERVER_IP=${SERVER_IP:-8.216.43.26}
+      - LOG_LEVEL=${LOG_LEVEL:-info}
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    restart: unless-stopped
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+volumes:
+  pgadmin_data:
