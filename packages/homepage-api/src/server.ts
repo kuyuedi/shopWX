@@ -45,12 +45,18 @@ export async function buildServer(apiPool: pg.Pool) {
   });
 
   // 静态文件：将 prediction-main 根目录托管在 /arb 路径，提供 arb-dashboard.html
-  // __dirname = packages/homepage-api/src，往上 3 级到 prediction-main/
+  // __dirname = packages/homepage-api/src（dev）或 dist（prod），往上 3 级到项目根
+  const staticRoot = path.resolve(__dirname, '../../../');
   await fastify.register(staticPlugin, {
-    root: path.resolve(__dirname, '../../../'),
+    root: staticRoot,
     prefix: '/arb/',
     serve: true,
     index: 'arb-dashboard.html',
+  });
+
+  // 兼容不带尾斜杠的访问 /arb → 重定向到 /arb/
+  fastify.get('/arb', { schema: { hide: true } }, async (_req, reply) => {
+    return reply.redirect('/arb/');
   });
 
   // Swagger
