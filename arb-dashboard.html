@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>套利机会看板</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #0f1117; color: #e2e8f0; min-height: 100vh; padding: 24px; }
+    h1 { font-size: 20px; font-weight: 600; margin-bottom: 4px; }
+    .subtitle { font-size: 13px; color: #64748b; margin-bottom: 20px; }
+
+    .toolbar { display: flex; gap: 12px; align-items: center; margin-bottom: 20px; flex-wrap: wrap; }
+    .toolbar select, .toolbar input { background: #1e2330; border: 1px solid #2d3748; color: #e2e8f0; padding: 7px 12px; border-radius: 6px; font-size: 13px; }
+    .btn { padding: 8px 18px; border-radius: 6px; border: none; cursor: pointer; font-size: 13px; font-weight: 500; transition: opacity .15s; }
+    .btn:hover { opacity: .85; }
+    .btn:disabled { opacity: .4; cursor: not-allowed; }
+    .btn-primary { background: #3b82f6; color: #fff; }
+    .btn-success { background: #22c55e; color: #fff; }
+    .btn-danger  { background: #ef4444; color: #fff; }
+
+    #status { font-size: 13px; color: #94a3b8; }
+    #status.error { color: #f87171; }
+    #status.ok    { color: #4ade80; }
+
+    .ttl-bar { font-size: 12px; color: #64748b; margin-bottom: 16px; }
+    .ttl-bar span { color: #facc15; font-weight: 600; }
+
+    table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    thead th { background: #1a1f2e; color: #94a3b8; font-weight: 500; padding: 10px 12px; text-align: left; border-bottom: 1px solid #2d3748; white-space: nowrap; }
+    tbody tr { border-bottom: 1px solid #1e2330; transition: background .1s; }
+    tbody tr:hover { background: #1a1f2e; }
+    td { padding: 10px 12px; vertical-align: top; }
+
+    .badge { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; }
+    .badge-direct     { background: #1d4ed8; color: #bfdbfe; }
+    .badge-complement { background: #7c3aed; color: #ddd6fe; }
+    .badge-buy  { background: #14532d; color: #86efac; }
+    .badge-sell { background: #7f1d1d; color: #fca5a5; }
+
+    .leg { margin-bottom: 6px; line-height: 1.6; }
+    .leg .platform { font-weight: 600; color: #f59e0b; }
+    .leg .market-id { font-size: 11px; color: #64748b; word-break: break-all; }
+
+    .spread { color: #4ade80; font-weight: 600; }
+    .profit { color: #facc15; }
+    .apy    { color: #a78bfa; }
+
+    .qty-input { width: 80px; background: #1e2330; border: 1px solid #2d3748; color: #e2e8f0; padding: 5px 8px; border-radius: 5px; font-size: 13px; }
+
+    .data-age { font-size: 12px; line-height: 1.8; }
+    .age-fresh  { color: #4ade80; }
+    .age-warn   { color: #facc15; }
+    .age-stale  { color: #f87171; font-weight: 600; }
+    .exec-result.success { color: #4ade80; }
+    .exec-result.fail    { color: #f87171; }
+    .exec-result.partial { color: #facc15; }
+
+    .empty { text-align: center; padding: 48px; color: #475569; }
+    .spinner { display: inline-block; width: 14px; height: 14px; border: 2px solid #3b82f6; border-top-color: transparent; border-radius: 50%; animation: spin .6s linear infinite; vertical-align: middle; margin-right: 6px; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+  </style>
+</head>
+<body>
+
+<h1>⚡ Kalshi × Polymarket 套利看板</h1>
+<p class="subtitle">扫描两平台共有市场，识别套利机会，人工确认后一键双腿下单</p>
+
+<div class="toolbar">
+  <label style="font-size:13px;color:#94a3b8">API 地址
+    <input id="apiBase" type="text" value="http://localhost:3100" style="width:220px;margin-left:8px" />
+  </label>
+  <select id="filterType">
+    <option value="">全部类型</option>
+    <option value="DIRECT">DIRECT</option>
+    <option value="COMPLEMENT">COMPLEMENT</option>
+  </select>
+  <label style="font-size:13px;color:#94a3b8">最小价差%
+    <input id="filterSpread" type="number" value="" min="0" max="100" step="0.5" style="width:80px;margin-left:6px" placeholder="不限" />
+  </label>
+  <label style="font-size:13px;color:#94a3b8">最大到期天数
+    <input id="filterDays" type="number" value="30" min="1" step="1" style="width:70px;margin-left:6px" placeholder="不限" />
+  </label>
+  <button class="btn btn-primary" id="btnScan">🔍 扫描套利机会</button>
+  <span id="status"></span>
+</div>
+
+<div class="ttl-bar" id="ttlBar" style="display:none">
+  机会有效期剩余 <span id="ttlCountdown">--</span> 秒 &nbsp;·&nbsp; 共 <span id="totalCount">0</span> 条
+</div>
+
+<table id="arbTable">
+  <thead>
+    <tr>
+      <th>#</th>
+      <th>市场</th>
+      <th>类型</th>
+      <th>腿 1</th>
+      <th>腿 2</th>
+      <th>价差</th>
+      <th>可执行量</th>
+      <th>毛利润</th>
+      <th>APY</th>
+      <th>数据时效</th>
+      <th>执行数量</th>
+      <th>操作</th>
+    </tr>
+  </thead>
+  <tbody id="arbBody">
+    <tr><td colspan="12" class="empty">点击「扫描套利机会」开始</td></tr>
+  </tbody>
+</table>
+
+<script>
+  // ── 状态 ──────────────────────────────────────────────────────────────────
+  let opportunities = [];
+  let expiresAt = null;
+  let ttlTimer = null;
+
+  const $ = id => document.getElementById(id);
+
+  // ── 工具函数 ──────────────────────────────────────────────────────────────
+  function setStatus(msg, type = '') {
+    const el = $('status');
+    el.textContent = msg;
+    el.className = type;
+  }
+
+  function pct(v) { return (v * 100).toFixed(2) + '%'; }
+  function usd(v) { return '$' + v.toFixed(2); }
+
+  // 计算数据时效显示（秒数 → 颜色标注文字）
+  function ageHtml(isoStr) {
+    if (!isoStr) return '<span class="age-stale">未知</span>';
+    const sec = Math.round((Date.now() - new Date(isoStr).getTime()) / 1000);
+    const label = sec < 60 ? `${sec}秒前` : sec < 3600 ? `${Math.floor(sec/60)}分前` : `${Math.floor(sec/3600)}小时前`;
+    const cls = sec < 300 ? 'age-fresh' : sec < 1800 ? 'age-warn' : 'age-stale';
+    return `<span class="${cls}">${label}</span>`;
+  }
+
+  function legHtml(leg) {
+    const actionBadge = `<span class="badge badge-${leg.action.toLowerCase()}">${leg.action}</span>`;
+    const titleLine = leg.marketTitle
+      ? `<div style="font-size:11px;color:#cbd5e1;margin-top:2px">${leg.marketTitle}</div>`
+      : '';
+    const expiryLine = leg.expiresAt
+      ? (() => {
+          const d = new Date(leg.expiresAt);
+          const days = Math.round((d - Date.now()) / 86400000);
+          const label = d.toLocaleDateString('zh-CN', { month: 'short', day: 'numeric', year: 'numeric' });
+          const color = days < 0 ? '#f87171' : days <= 7 ? '#facc15' : '#94a3b8';
+          return `<div style="font-size:11px;color:${color};margin-top:1px">到期: ${label}（${days}天）</div>`;
+        })()
+      : '';
+    return `
+      <div class="leg">
+        <span class="platform">${leg.platform}</span>
+        ${actionBadge}
+        <strong>${leg.side}</strong>
+        @ <strong>${pct(leg.normalizedPrice)}</strong>
+        <div class="market-id">${leg.marketId}</div>
+        ${titleLine}
+        ${expiryLine}
+      </div>`;
+  }
+
+  // ── 倒计时 ────────────────────────────────────────────────────────────────
+  function startCountdown(ttlSec) {
+    if (ttlTimer) clearInterval(ttlTimer);
+    const deadline = Date.now() + ttlSec * 1000;
+    expiresAt = deadline;
+
+    function tick() {
+      const remaining = Math.max(0, Math.round((deadline - Date.now()) / 1000));
+      $('ttlCountdown').textContent = remaining;
+      if (remaining === 0) {
+        clearInterval(ttlTimer);
+        $('ttlCountdown').style.color = '#ef4444';
+        // 禁用所有执行按钮
+        document.querySelectorAll('.btn-execute').forEach(b => {
+          b.disabled = true;
+          b.textContent = '已过期';
+        });
+      }
+    }
+    tick();
+    ttlTimer = setInterval(tick, 1000);
+  }
+
+  // ── 渲染表格 ──────────────────────────────────────────────────────────────
+  function renderTable(data) {
+    const tbody = $('arbBody');
+    if (!data.length) {
+      tbody.innerHTML = '<tr><td colspan="12" class="empty">暂无套利机会</td></tr>';
+      return;
+    }
+
+    tbody.innerHTML = data.map((o, i) => {
+      const typeBadge = `<span class="badge badge-${o.arbType.toLowerCase()}">${o.arbType}</span>`;
+      const apyCell = o.apy != null
+        ? `<span class="apy">${(o.apy * 100).toFixed(1)}%/年</span>${o.daysToExpiry != null ? `<br><small style="color:#64748b">${o.daysToExpiry.toFixed(0)}天到期</small>` : ''}`
+        : '—';
+      const dataAgeCell = `<div class="data-age">
+        腿1: ${ageHtml(o.leg1DataAt)}<br>
+        腿2: ${ageHtml(o.leg2DataAt)}
+      </div>`;
+
+      return `
+        <tr id="row-${o.arbId}">
+          <td style="color:#64748b">${i + 1}</td>
+          <td style="max-width:200px">
+            <div style="font-weight:500;margin-bottom:4px">${o.marketTitle ?? o.canonicalMarketId}</div>
+            <div style="font-size:11px;color:#475569">${o.canonicalMarketId}</div>
+          </td>
+          <td>${typeBadge}</td>
+          <td>${legHtml(o.leg1)}</td>
+          <td>${legHtml(o.leg2)}</td>
+          <td><span class="spread">${pct(o.grossSpreadPct)}</span></td>
+          <td>${o.executableQty}</td>
+          <td><span class="profit">${usd(o.grossProfit)}</span></td>
+          <td>${apyCell}</td>
+          <td>${dataAgeCell}</td>
+          <td>
+            <input class="qty-input" type="number" id="qty-${o.arbId}"
+              value="${o.executableQty}" min="1" max="${o.executableQty}" />
+          </td>
+          <td>
+            <button class="btn btn-success btn-execute" data-arb-id="${o.arbId}" onclick="execute('${o.arbId}')">
+              ✅ 确认下注
+            </button>
+            <div class="exec-result" id="result-${o.arbId}"></div>
+          </td>
+        </tr>`;
+    }).join('');
+  }
+
+  // ── 扫描 ──────────────────────────────────────────────────────────────────
+  async function scan() {
+    const base = $('apiBase').value.replace(/\/$/, '');
+    const type = $('filterType').value;
+    const spread = $('filterSpread').value;
+    const maxDays = $('filterDays').value;
+
+    let url = `${base}/api/v1/arb/kalshi-polymarket`;
+    const params = new URLSearchParams();
+    if (type) params.set('arb_type', type);
+    if (spread) params.set('min_spread_pct', (parseFloat(spread) / 100).toString());
+    if ([...params].length) url += '?' + params.toString();
+
+    $('btnScan').disabled = true;
+    $('btnScan').innerHTML = '<span class="spinner"></span>扫描中…';
+    setStatus('');
+
+    try {
+      const res = await fetch(url);
+      const data = await res.json();
+
+      if (!res.ok) {
+        setStatus('扫描失败：' + (data.error ?? res.statusText), 'error');
+        return;
+      }
+
+      let opps = data.opportunities ?? [];
+
+      // 按到期天数过滤（daysToExpiry 为 null 表示无到期日，不过滤）
+      if (maxDays) {
+        const limit = parseFloat(maxDays);
+        opps = opps.filter(o => o.daysToExpiry != null && o.daysToExpiry <= limit);
+      }
+
+      opportunities = opps;
+      $('totalCount').textContent = opportunities.length;
+      $('ttlBar').style.display = '';
+      startCountdown(data.opportunity_ttl_sec ?? 60);
+      renderTable(opportunities);
+      setStatus(`扫描完成，找到 ${opportunities.length} 条机会`, 'ok');
+    } catch (err) {
+      setStatus('请求失败：' + err.message, 'error');
+    } finally {
+      $('btnScan').disabled = false;
+      $('btnScan').textContent = '🔍 扫描套利机会';
+    }
+  }
+
+  // ── 执行下注 ──────────────────────────────────────────────────────────────
+  async function execute(arbId) {
+    const base = $('apiBase').value.replace(/\/$/, '');
+    const qtyInput = $(`qty-${arbId}`);
+    const qty = parseInt(qtyInput?.value ?? '0', 10);
+    const btn = document.querySelector(`[data-arb-id="${arbId}"]`);
+    const resultEl = $(`result-${arbId}`);
+
+    if (!qty || qty <= 0) {
+      resultEl.textContent = '请输入有效数量';
+      resultEl.className = 'exec-result fail';
+      return;
+    }
+
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner"></span>下单中…';
+    resultEl.textContent = '';
+
+    try {
+      const res = await fetch(`${base}/api/v1/arb/kalshi-polymarket/${arbId}/execute`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ qty }),
+      });
+
+      const data = await res.json();
+
+      if (res.status === 404) {
+        resultEl.textContent = '❌ 机会不存在，请重新扫描';
+        resultEl.className = 'exec-result fail';
+        return;
+      }
+      if (res.status === 410) {
+        resultEl.textContent = '⏰ 已过期，请重新扫描';
+        resultEl.className = 'exec-result fail';
+        return;
+      }
+      if (res.status === 402) {
+        resultEl.textContent = '💸 ' + data.error;
+        resultEl.className = 'exec-result fail';
+        return;
+      }
+      if (!res.ok) {
+        resultEl.textContent = '❌ ' + (data.error ?? '下单失败');
+        resultEl.className = 'exec-result fail';
+        return;
+      }
+
+      // HTTP 200 — 可能全成功或部分失败
+      const bothOk = data.kalshi_success && data.polymarket_success;
+      const noneOk = !data.kalshi_success && !data.polymarket_success;
+
+      if (bothOk) {
+        resultEl.innerHTML = `✅ 双腿成功<br>Kalshi: ${data.kalshi_order_id}<br>Poly: ${data.polymarket_order_id}`;
+        resultEl.className = 'exec-result success';
+        btn.textContent = '✅ 已执行';
+      } else if (noneOk) {
+        resultEl.innerHTML = `❌ 双腿失败<br>K: ${data.kalshi_error ?? ''}<br>P: ${data.polymarket_error ?? ''}`;
+        resultEl.className = 'exec-result fail';
+        btn.disabled = false;
+        btn.textContent = '✅ 确认下注';
+      } else {
+        // 部分成功
+        const kLine = data.kalshi_success ? `✅ Kalshi: ${data.kalshi_order_id}` : `❌ Kalshi: ${data.kalshi_error}`;
+        const pLine = data.polymarket_success ? `✅ Poly: ${data.polymarket_order_id}` : `❌ Poly: ${data.polymarket_error}`;
+        resultEl.innerHTML = `⚠️ 部分成功<br>${kLine}<br>${pLine}`;
+        resultEl.className = 'exec-result partial';
+        btn.textContent = '⚠️ 部分成功';
+      }
+    } catch (err) {
+      resultEl.textContent = '❌ 请求失败：' + err.message;
+      resultEl.className = 'exec-result fail';
+      btn.disabled = false;
+      btn.textContent = '✅ 确认下注';
+    }
+  }
+
+  // ── 绑定事件 ──────────────────────────────────────────────────────────────
+  $('btnScan').addEventListener('click', scan);
+</script>
+</body>
+</html>

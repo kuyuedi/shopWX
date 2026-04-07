@@ -1,8 +1,14 @@
+import { createRequire } from 'module';
+import { fileURLToPath } from 'url';
+import path from 'path';
 import Fastify from 'fastify';
 import cors from '@fastify/cors';
+import staticPlugin from '@fastify/static';
 import swagger from '@fastify/swagger';
 import swaggerUi from '@fastify/swagger-ui';
 import type pg from 'pg';
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 import { createLogger } from '@prediction-market/shared';
 import { healthRoute } from './routes/health.js';
 import { categoriesRoute } from './routes/categories.js';
@@ -16,6 +22,7 @@ import { authRoute } from './routes/auth.js';
 import { marketDetailRoute } from './routes/marketDetail.js';
 import { kalshiTradingRoute } from './routes/kalshiTrading.js';
 import { polymarketTradingRoute } from './routes/polymarketTrading.js';
+import { kalshiPolymarketArbRoute } from './routes/kalshiPolymarketArb.js';
 
 declare module 'fastify' {
   interface FastifyInstance {
@@ -35,6 +42,15 @@ export async function buildServer(apiPool: pg.Pool) {
   // CORS
   await fastify.register(cors, {
     origin: true,
+  });
+
+  // 静态文件：将 prediction-main 根目录托管在 /arb 路径，提供 arb-dashboard.html
+  // __dirname = packages/homepage-api/src，往上 3 级到 prediction-main/
+  await fastify.register(staticPlugin, {
+    root: path.resolve(__dirname, '../../../'),
+    prefix: '/arb/',
+    serve: true,
+    index: 'arb-dashboard.html',
   });
 
   // Swagger
@@ -65,6 +81,7 @@ export async function buildServer(apiPool: pg.Pool) {
   await fastify.register(marketDetailRoute);
   await fastify.register(kalshiTradingRoute);
   await fastify.register(polymarketTradingRoute);
+  await fastify.register(kalshiPolymarketArbRoute);
 
   // Raw OpenAPI JSON spec endpoint (for frontend team / Postman / codegen)
   fastify.get('/api/v1/openapi.json', { schema: { hide: true } }, async (_request, reply) => {
