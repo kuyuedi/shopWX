@@ -368,3 +368,160 @@ Kalshi 下单使用 `ticker`，可通过以下方式获取：
 ```
 GET https://api.elections.kalshi.com/trade-api/v2/markets?status=open&limit=10
 ```
+
+
+---
+
+## Kalshi × Polymarket 套利接口
+
+### 扫描套利机会
+
+```
+GET /api/v1/arb/kalshi-polymarket
+```
+
+扫描 Kalshi 和 Polymarket 两平台共有市场，识别价差套利机会。
+
+**查询参数：**
+
+| 参数 | 类型 | 必填 | 说明 |
+|---|---|---|---|
+| min_spread_pct | number | ❌ | 最小价差百分比过滤（如 `0.05` 表示 5%）|
+| arb_type | string | ❌ | 套利类型过滤：`DIRECT`（同侧价差）或 `COMPLEMENT`（互补价差）|
+
+**响应示例：**
+```json
+{
+  "opportunities": [
+    {
+      "arbId": "b114a929-c9f8-4e4a-943a-173c814b179d",
+      "canonicalMarketId": "CM-52a77c687fbd83ef",
+      "marketTitle": "Will Kim Kardashian pass the Bar Exam before 2027?",
+      "arbType": "COMPLEMENT",
+      "leg1": {
+        "platform": "POLYMARKET",
+        "marketId": "675435",
+        "marketTitle": "Will Kim Kardashian pass the bar exam by May 3?",
+        "expiresAt": "2026-05-03T00:00:00.000Z",
+        "side": "YES",
+        "action": "BUY",
+        "normalizedPrice": 0.10,
+        "qty": 93
+      },
+      "leg2": {
+        "platform": "KALSHI",
+        "marketId": "KXKIMKBAREXAM-27",
+        "marketTitle": "Will Kim Kardashian pass the Bar Exam before 2027?",
+        "expiresAt": "2027-01-01T00:00:00.000Z",
+        "side": "NO",
+        "action": "BUY",
+        "normalizedPrice": 0.64,
+        "qty": 93
+      },
+      "grossSpread": 0.26,
+      "grossSpreadPct": 0.3514,
+      "executableQty": 93,
+      "grossProfit": 24.25,
+      "daysToExpiry": 26,
+      "apy": 4.98,
+      "leg1DataAt": "2026-04-07T05:30:00.000Z",
+      "leg2DataAt": "2026-04-07T05:28:00.000Z",
+      "scannedAt": "2026-04-07T05:31:00.000Z",
+      "expiresAt": "2026-04-07T05:32:00.000Z"
+    }
+  ],
+  "scanned_at": "2026-04-07T05:31:00.000Z",
+  "opportunity_ttl_sec": 60,
+  "count": 1
+}
+```
+
+**套利类型说明：**
+
+| 类型 | 逻辑 | 说明 |
+|---|---|---|
+| DIRECT | 同侧价差 | 一个平台买入、另一个平台卖出同一方向（YES 或 NO），赚取价差 |
+| COMPLEMENT | 互补价差 | 一个平台买 YES、另一个平台买 NO，总成本 < $1，到期必然获利 |
+
+**ArbLeg 字段说明：**
+
+| 字段 | 类型 | 说明 |
+|---|---|---|
+| platform | string | 平台：`KALSHI` 或 `POLYMARKET` |
+| marketId | string | 市场标识符（Kalshi: ticker，Polymarket: token_id）|
+| marketTitle | string | 该平台的市场标题 |
+| expiresAt | string | 该平台市场的到期时间（ISO 8601）|
+| side | string | 方向：`YES` 或 `NO` |
+| action | string | 操作：`BUY` 或 `SELL` |
+| normalizedPrice | number | 归一化价格（0-1 小数）|
+| qty | number | 可执行数量 |
+
+> **注意：** 套利机会有 TTL（默认 60 秒），过期后执行接口会返回 410。
+
+---
+
+### 执行套利下单
+
+```
+POST /api/v1/arb/kalshi-polymarket/:arbId/execute
+Content-Type: application/json
+```
+
+对指定套利机会执行双腿下单（同时向 Kalshi 和 Polymarket 下单）。
+
+**路径参数：**
+- `arbId`：套利机会 UUID（从扫描接口获取）
+
+**请求体：**
+
+| 字段 | 类型 | 必填 | 说明 |
+|---|---|---|---|
+| qty | number | ❌ | 执行数量，不填则使用 executableQty |
+
+**请求示例：**
+```json
+{
+  "qty": 50
+}
+```
+
+**响应示例（双腿成功）：**
+```json
+{
+  "arb_id": "b114a929-c9f8-4e4a-943a-173c814b179d",
+  "kalshi_order_id": "74ec04c7-5976-4dea-afe6-131af385d124",
+  "polymarket_order_id": "0xcbd7801f15b094bd38b0bc3015ed2d97cd18721189ac57520ebe430ae30634c0",
+  "executed_qty": 50,
+  "kalshi_success": true,
+  "polymarket_success": true,
+  "kalshi_error": null,
+  "polymarket_error": null
+}
+```
+
+**响应示例（部分失败）：**
+```json
+{
+  "arb_id": "b114a929-...",
+  "kalshi_order_id": "74ec04c7-...",
+  "polymarket_order_id": null,
+  "executed_qty": 50,
+  "kalshi_success": true,
+  "polymarket_success": false,
+  "kalshi_error": null,
+  "polymarket_error": "Insufficient balance"
+}
+```
+
+**特殊状态码：**
+
+| HTTP 状态码 | 说明 |
+|---|---|
+| 200 | 下单完成（可能部分失败，检查 `kalshi_success` 和 `polymarket_success`）|
+| 400 | 执行数量超过可执行上限 |
+| 402 | 余额不足（返回具体平台和金额信息）|
+| 404 | 套利机会不存在，需重新扫描 |
+| 410 | 套利机会已过期，需重新扫描 |
+| 422 | 价格数据已过期（超过 60 秒），需重新扫描 |
+
+> **重要：** 双腿下单是并发执行的，可能出现一腿成功一腿失败的情况。HTTP 200 不代表双腿都成功，需检查 `kalshi_success` 和 `polymarket_success` 字段。
