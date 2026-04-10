@@ -39,10 +39,17 @@ const SUBTYPE_NOTES: Record<string, string> = {
 
 function buildTradeUrl(exchangeId: string, marketId: string, eventId: string | null): string | null {
   switch (exchangeId) {
-    case 'KALSHI':
-      return `https://kalshi.com/markets/${marketId}`;
+    case 'KALSHI': {
+      // Kalshi URL: /markets/<event_ticker>/<market_ticker>
+      // event_ticker 是 ticker 第一个 '-' 之前的部分，全部小写
+      const parts = marketId.split('-');
+      const eventTicker = (parts[0] ?? marketId).toLowerCase();
+      return `https://kalshi.com/markets/${eventTicker}/${marketId.toLowerCase()}`;
+    }
     case 'POLYMARKET':
-      return eventId ? `https://polymarket.com/event/${eventId}` : null;
+      // Polymarket：数据库 eventId 是数字 ID，无法直接构建 URL
+      // 使用 Gamma API 链接，用户可从中找到市场页面
+      return `https://gamma-api.polymarket.com/markets/${marketId}`;
     case 'PREDICT':
       return `https://predict.fun/market/${marketId}`;
     default:

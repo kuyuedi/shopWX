@@ -9,7 +9,6 @@
     body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #0f1117; color: #e2e8f0; min-height: 100vh; padding: 24px; }
     h1 { font-size: 20px; font-weight: 600; margin-bottom: 4px; }
     .subtitle { font-size: 13px; color: #64748b; margin-bottom: 20px; }
-
     .toolbar { display: flex; gap: 12px; align-items: center; margin-bottom: 20px; flex-wrap: wrap; }
     .toolbar select, .toolbar input { background: #1e2330; border: 1px solid #2d3748; color: #e2e8f0; padding: 7px 12px; border-radius: 6px; font-size: 13px; }
     .btn { padding: 8px 18px; border-radius: 6px; border: none; cursor: pointer; font-size: 13px; font-weight: 500; transition: opacity .15s; }
@@ -17,58 +16,66 @@
     .btn:disabled { opacity: .4; cursor: not-allowed; }
     .btn-primary { background: #3b82f6; color: #fff; }
     .btn-success { background: #22c55e; color: #fff; }
-    .btn-danger  { background: #ef4444; color: #fff; }
-
-    #status { font-size: 13px; color: #94a3b8; }
-    #status.error { color: #f87171; }
-    #status.ok    { color: #4ade80; }
-
+    #status, #dbStatus { font-size: 13px; color: #94a3b8; }
+    #status.error, #dbStatus.error { color: #f87171; }
+    #status.ok, #dbStatus.ok { color: #4ade80; }
     .ttl-bar { font-size: 12px; color: #64748b; margin-bottom: 16px; }
     .ttl-bar span { color: #facc15; font-weight: 600; }
-
     table { width: 100%; border-collapse: collapse; font-size: 13px; }
     thead th { background: #1a1f2e; color: #94a3b8; font-weight: 500; padding: 10px 12px; text-align: left; border-bottom: 1px solid #2d3748; white-space: nowrap; }
     tbody tr { border-bottom: 1px solid #1e2330; transition: background .1s; }
     tbody tr:hover { background: #1a1f2e; }
     td { padding: 10px 12px; vertical-align: top; }
-
     .badge { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; }
-    .badge-direct     { background: #1d4ed8; color: #bfdbfe; }
+    .badge-direct { background: #1d4ed8; color: #bfdbfe; }
     .badge-complement { background: #7c3aed; color: #ddd6fe; }
-    .badge-buy  { background: #14532d; color: #86efac; }
+    .badge-buy { background: #14532d; color: #86efac; }
     .badge-sell { background: #7f1d1d; color: #fca5a5; }
-
     .leg { margin-bottom: 6px; line-height: 1.6; }
     .leg .platform { font-weight: 600; color: #f59e0b; }
     .leg .market-id { font-size: 11px; color: #64748b; word-break: break-all; }
-
     .spread { color: #4ade80; font-weight: 600; }
     .profit { color: #facc15; }
-    .apy    { color: #a78bfa; }
-
+    .apy { color: #a78bfa; }
     .qty-input { width: 80px; background: #1e2330; border: 1px solid #2d3748; color: #e2e8f0; padding: 5px 8px; border-radius: 5px; font-size: 13px; }
-
     .data-age { font-size: 12px; line-height: 1.8; }
-    .age-fresh  { color: #4ade80; }
-    .age-warn   { color: #facc15; }
-    .age-stale  { color: #f87171; font-weight: 600; }
+    .age-fresh { color: #4ade80; }
+    .age-warn { color: #facc15; }
+    .age-stale { color: #f87171; font-weight: 600; }
+    .exec-result { margin-top: 6px; font-size: 12px; }
     .exec-result.success { color: #4ade80; }
-    .exec-result.fail    { color: #f87171; }
+    .exec-result.fail { color: #f87171; }
     .exec-result.partial { color: #facc15; }
-
     .empty { text-align: center; padding: 48px; color: #475569; }
     .spinner { display: inline-block; width: 14px; height: 14px; border: 2px solid #3b82f6; border-top-color: transparent; border-radius: 50%; animation: spin .6s linear infinite; vertical-align: middle; margin-right: 6px; }
     @keyframes spin { to { transform: rotate(360deg); } }
+    .tabs { display: flex; gap: 0; margin-bottom: 20px; border-bottom: 1px solid #2d3748; }
+    .tab { padding: 10px 24px; font-size: 14px; font-weight: 500; color: #64748b; cursor: pointer; border-bottom: 2px solid transparent; transition: all .15s; }
+    .tab:hover { color: #e2e8f0; }
+    .tab.active { color: #3b82f6; border-bottom-color: #3b82f6; }
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; }
+    .page-nav { display: flex; gap: 8px; align-items: center; margin-top: 12px; font-size: 13px; color: #94a3b8; }
+    .stat-cards { display: flex; gap: 16px; margin-bottom: 20px; flex-wrap: wrap; }
+    .stat-card { background: #1a1f2e; border-radius: 8px; padding: 16px 24px; min-width: 120px; }
+    .stat-label { font-size: 12px; color: #64748b; }
+    .stat-value { font-size: 24px; font-weight: 600; }
   </style>
 </head>
 <body>
-
-<h1>⚡ Kalshi × Polymarket 套利看板</h1>
+<h1>&#9889; Kalshi &#215; Polymarket 套利看板</h1>
 <p class="subtitle">扫描两平台共有市场，识别套利机会，人工确认后一键双腿下单</p>
 
+<div class="tabs">
+  <div class="tab active" data-tab="realtime" onclick="switchTab('realtime')">&#128269; 实时扫描</div>
+  <div class="tab" data-tab="history" onclick="switchTab('history')">&#128202; 数据库套利</div>
+</div>
+
+<!-- 实时扫描 Tab -->
+<div id="panel-realtime" class="tab-panel active">
 <div class="toolbar">
   <label style="font-size:13px;color:#94a3b8">API 地址
-    <input id="apiBase" type="text" value="http://8.216.43.26:3200" style="width:220px;margin-left:8px" />
+    <input id="apiBase" type="text" value="" style="width:220px;margin-left:8px" />
   </label>
   <select id="filterType">
     <option value="">全部类型</option>
@@ -81,286 +88,292 @@
   <label style="font-size:13px;color:#94a3b8">最大到期天数
     <input id="filterDays" type="number" value="30" min="1" step="1" style="width:70px;margin-left:6px" placeholder="不限" />
   </label>
-  <button class="btn btn-primary" id="btnScan">🔍 扫描套利机会</button>
+  <button class="btn btn-primary" id="btnScan">&#128269; 扫描套利机会</button>
   <span id="status"></span>
 </div>
-
 <div class="ttl-bar" id="ttlBar" style="display:none">
-  机会有效期剩余 <span id="ttlCountdown">--</span> 秒 &nbsp;·&nbsp; 共 <span id="totalCount">0</span> 条
+  机会有效期剩余 <span id="ttlCountdown">--</span> 秒 &nbsp;&#183;&nbsp; 共 <span id="totalCount">0</span> 条
 </div>
-
-<table id="arbTable">
-  <thead>
-    <tr>
-      <th>#</th>
-      <th>市场</th>
-      <th>类型</th>
-      <th>腿 1</th>
-      <th>腿 2</th>
-      <th>价差</th>
-      <th>可执行量</th>
-      <th>毛利润</th>
-      <th>APY</th>
-      <th>数据时效</th>
-      <th>执行数量</th>
-      <th>操作</th>
-    </tr>
-  </thead>
+<table>
+  <thead><tr>
+    <th>#</th><th>市场</th><th>类型</th><th>腿 1</th><th>腿 2</th><th>价差</th>
+    <th>可执行量</th><th>毛利润</th><th>APY</th><th>数据时效</th><th>执行数量</th><th>操作</th>
+  </tr></thead>
   <tbody id="arbBody">
     <tr><td colspan="12" class="empty">点击「扫描套利机会」开始</td></tr>
   </tbody>
 </table>
+</div>
+
+<!-- 数据库套利 Tab -->
+<div id="panel-history" class="tab-panel">
+  <div class="stat-cards">
+    <div class="stat-card"><div class="stat-label">活跃数量</div><div class="stat-value" id="statCount">--</div></div>
+    <div class="stat-card"><div class="stat-label">平均价差</div><div class="stat-value" id="statAvgSpread">--</div></div>
+    <div class="stat-card"><div class="stat-label">最大价差</div><div class="stat-value" style="color:#4ade80" id="statBestSpread">--</div></div>
+    <div class="stat-card"><div class="stat-label">总利润</div><div class="stat-value" style="color:#facc15" id="statTotalProfit">--</div></div>
+    <div class="stat-card"><div class="stat-label">分类统计</div><div style="font-size:12px;margin-top:4px" id="statCounts">--</div></div>
+    <div class="stat-card"><div class="stat-label">最后扫描</div><div style="font-size:12px;margin-top:4px" id="statLastScan">--</div></div>
+  </div>
+  <div class="toolbar">
+    <select id="dbFilterType"><option value="">全部类型</option><option value="DIRECT">DIRECT</option><option value="COMPLEMENT">COMPLEMENT</option></select>
+    <select id="dbFilterCategory"><option value="">全部分类</option></select>
+    <select id="dbSort"><option value="spread">按价差排序</option><option value="profit">按利润排序</option><option value="detected">按发现时间</option><option value="apy">按 APY</option></select>
+    <button class="btn btn-primary" id="btnDbLoad">&#128202; 刷新数据</button>
+    <span id="dbStatus"></span>
+  </div>
+  <div style="overflow-x:auto">
+  <table>
+    <thead><tr>
+      <th>#</th><th>类型</th><th>市场</th><th>分类</th><th>到期日</th>
+      <th>腿</th><th>市场链接</th><th>平台</th><th>方向</th><th>价格</th><th>深度</th>
+      <th>价差%</th><th>可执行量</th><th>毛利润</th><th>置信度</th><th>更新时间</th>
+    </tr></thead>
+    <tbody id="dbBody">
+      <tr><td colspan="16" class="empty">点击「刷新数据」查看数据库中的套利机会</td></tr>
+    </tbody>
+  </table>
+  </div>
+  <div class="page-nav" id="dbPageNav" style="display:none">
+    <button class="btn btn-primary" id="btnDbPrev" disabled>上一页</button>
+    <span id="dbPageInfo">第 1 页</span>
+    <button class="btn btn-primary" id="btnDbNext">下一页</button>
+    <span id="dbTotal"></span>
+  </div>
+</div>
 
 <script>
-  // ── 状态 ──────────────────────────────────────────────────────────────────
-  let opportunities = [];
-  let expiresAt = null;
-  let ttlTimer = null;
+  var G = function(id) { return document.getElementById(id); };
 
-  const $ = id => document.getElementById(id);
+  // 自动检测 API 地址
+  G('apiBase').value = window.location.origin;
 
-  // ── 工具函数 ──────────────────────────────────────────────────────────────
-  function setStatus(msg, type = '') {
-    const el = $('status');
-    el.textContent = msg;
-    el.className = type;
-  }
-
+  // 工具函数
   function pct(v) { return (v * 100).toFixed(2) + '%'; }
-  function usd(v) { return '$' + v.toFixed(2); }
-
-  // 计算数据时效显示（秒数 → 颜色标注文字）
+  function dollar(v) { return String.fromCharCode(36) + v.toFixed(2); }
   function ageHtml(isoStr) {
     if (!isoStr) return '<span class="age-stale">未知</span>';
-    const sec = Math.round((Date.now() - new Date(isoStr).getTime()) / 1000);
-    const label = sec < 60 ? `${sec}秒前` : sec < 3600 ? `${Math.floor(sec/60)}分前` : `${Math.floor(sec/3600)}小时前`;
-    const cls = sec < 300 ? 'age-fresh' : sec < 1800 ? 'age-warn' : 'age-stale';
-    return `<span class="${cls}">${label}</span>`;
+    var sec = Math.round((Date.now() - new Date(isoStr).getTime()) / 1000);
+    var label = sec < 60 ? sec + '秒前' : sec < 3600 ? Math.floor(sec/60) + '分前' : Math.floor(sec/3600) + '小时前';
+    var cls = sec < 300 ? 'age-fresh' : sec < 1800 ? 'age-warn' : 'age-stale';
+    return '<span class="' + cls + '">' + label + '</span>';
   }
+
+  // Tab 切换
+  function switchTab(name) {
+    document.querySelectorAll('.tab').forEach(function(t) { t.classList.toggle('active', t.dataset.tab === name); });
+    document.querySelectorAll('.tab-panel').forEach(function(p) { p.classList.toggle('active', p.id === 'panel-' + name); });
+    if (name === 'history' && !dbLoaded) loadDbArbs();
+  }
+
+  // ── 实时扫描 ──────────────────────────────────────────────────────────
+  var opportunities = [];
+  var ttlTimer = null;
+
+  function setStatus(msg, type) { var el = G('status'); el.textContent = msg; el.className = type || ''; }
 
   function legHtml(leg) {
-    const actionBadge = `<span class="badge badge-${leg.action.toLowerCase()}">${leg.action}</span>`;
-    const titleLine = leg.marketTitle
-      ? `<div style="font-size:11px;color:#cbd5e1;margin-top:2px">${leg.marketTitle}</div>`
-      : '';
-    const expiryLine = leg.expiresAt
-      ? (() => {
-          const d = new Date(leg.expiresAt);
-          const days = Math.round((d - Date.now()) / 86400000);
-          const label = d.toLocaleDateString('zh-CN', { month: 'short', day: 'numeric', year: 'numeric' });
-          const color = days < 0 ? '#f87171' : days <= 7 ? '#facc15' : '#94a3b8';
-          return `<div style="font-size:11px;color:${color};margin-top:1px">到期: ${label}（${days}天）</div>`;
-        })()
-      : '';
-    return `
-      <div class="leg">
-        <span class="platform">${leg.platform}</span>
-        ${actionBadge}
-        <strong>${leg.side}</strong>
-        @ <strong>${pct(leg.normalizedPrice)}</strong>
-        <div class="market-id">${leg.marketId}</div>
-        ${titleLine}
-        ${expiryLine}
-      </div>`;
+    var actionBadge = '<span class="badge badge-' + leg.action.toLowerCase() + '">' + leg.action + '</span>';
+    var titleLine = leg.marketTitle ? '<div style="font-size:11px;color:#cbd5e1;margin-top:2px">' + leg.marketTitle + '</div>' : '';
+    var expiryLine = '';
+    if (leg.expiresAt) {
+      var d = new Date(leg.expiresAt);
+      var days = Math.round((d - Date.now()) / 86400000);
+      var color = days < 0 ? '#f87171' : days <= 7 ? '#facc15' : '#94a3b8';
+      expiryLine = '<div style="font-size:11px;color:' + color + ';margin-top:1px">到期: ' + d.toLocaleDateString('zh-CN') + ' (' + days + '天)</div>';
+    }
+    return '<div class="leg"><span class="platform">' + leg.platform + '</span> ' + actionBadge +
+      ' <strong>' + leg.side + '</strong> @ <strong>' + pct(leg.normalizedPrice) + '</strong>' +
+      '<div class="market-id">' + leg.marketId + '</div>' + titleLine + expiryLine + '</div>';
   }
 
-  // ── 倒计时 ────────────────────────────────────────────────────────────────
   function startCountdown(ttlSec) {
     if (ttlTimer) clearInterval(ttlTimer);
-    const deadline = Date.now() + ttlSec * 1000;
-    expiresAt = deadline;
-
+    var deadline = Date.now() + ttlSec * 1000;
     function tick() {
-      const remaining = Math.max(0, Math.round((deadline - Date.now()) / 1000));
-      $('ttlCountdown').textContent = remaining;
-      if (remaining === 0) {
-        clearInterval(ttlTimer);
-        $('ttlCountdown').style.color = '#ef4444';
-        // 禁用所有执行按钮
-        document.querySelectorAll('.btn-execute').forEach(b => {
-          b.disabled = true;
-          b.textContent = '已过期';
-        });
-      }
+      var remaining = Math.max(0, Math.round((deadline - Date.now()) / 1000));
+      G('ttlCountdown').textContent = remaining;
+      if (remaining === 0) { clearInterval(ttlTimer); }
     }
     tick();
     ttlTimer = setInterval(tick, 1000);
   }
 
-  // ── 渲染表格 ──────────────────────────────────────────────────────────────
   function renderTable(data) {
-    const tbody = $('arbBody');
-    if (!data.length) {
-      tbody.innerHTML = '<tr><td colspan="12" class="empty">暂无套利机会</td></tr>';
-      return;
-    }
-
-    tbody.innerHTML = data.map((o, i) => {
-      const typeBadge = `<span class="badge badge-${o.arbType.toLowerCase()}">${o.arbType}</span>`;
-      const apyCell = o.apy != null
-        ? `<span class="apy">${(o.apy * 100).toFixed(1)}%/年</span>${o.daysToExpiry != null ? `<br><small style="color:#64748b">${o.daysToExpiry.toFixed(0)}天到期</small>` : ''}`
-        : '—';
-      const dataAgeCell = `<div class="data-age">
-        腿1: ${ageHtml(o.leg1DataAt)}<br>
-        腿2: ${ageHtml(o.leg2DataAt)}
-      </div>`;
-
-      return `
-        <tr id="row-${o.arbId}">
-          <td style="color:#64748b">${i + 1}</td>
-          <td style="max-width:200px">
-            <div style="font-weight:500;margin-bottom:4px">${o.marketTitle ?? o.canonicalMarketId}</div>
-            <div style="font-size:11px;color:#475569">${o.canonicalMarketId}</div>
-          </td>
-          <td>${typeBadge}</td>
-          <td>${legHtml(o.leg1)}</td>
-          <td>${legHtml(o.leg2)}</td>
-          <td><span class="spread">${pct(o.grossSpreadPct)}</span></td>
-          <td>${o.executableQty}</td>
-          <td><span class="profit">${usd(o.grossProfit)}</span></td>
-          <td>${apyCell}</td>
-          <td>${dataAgeCell}</td>
-          <td>
-            <input class="qty-input" type="number" id="qty-${o.arbId}"
-              value="${o.executableQty}" min="1" max="${o.executableQty}" />
-          </td>
-          <td>
-            <button class="btn btn-success btn-execute" data-arb-id="${o.arbId}" onclick="execute('${o.arbId}')">
-              ✅ 确认下注
-            </button>
-            <div class="exec-result" id="result-${o.arbId}"></div>
-          </td>
-        </tr>`;
+    var tbody = G('arbBody');
+    if (!data.length) { tbody.innerHTML = '<tr><td colspan="12" class="empty">暂无套利机会</td></tr>'; return; }
+    tbody.innerHTML = data.map(function(o, i) {
+      var typeBadge = '<span class="badge badge-' + o.arbType.toLowerCase() + '">' + o.arbType + '</span>';
+      var apyCell = o.apy != null ? '<span class="apy">' + (o.apy * 100).toFixed(1) + '%/年</span>' + (o.daysToExpiry != null ? '<br><small style="color:#64748b">' + o.daysToExpiry.toFixed(0) + '天到期</small>' : '') : '—';
+      var dataAgeCell = '<div class="data-age">腿1: ' + ageHtml(o.leg1DataAt) + '<br>腿2: ' + ageHtml(o.leg2DataAt) + '</div>';
+      return '<tr><td style="color:#64748b">' + (i+1) + '</td>' +
+        '<td style="max-width:200px"><div style="font-weight:500;margin-bottom:4px">' + (o.marketTitle || o.canonicalMarketId) + '</div></td>' +
+        '<td>' + typeBadge + '</td><td>' + legHtml(o.leg1) + '</td><td>' + legHtml(o.leg2) + '</td>' +
+        '<td><span class="spread">' + pct(o.grossSpreadPct) + '</span></td><td>' + o.executableQty + '</td>' +
+        '<td><span class="profit">' + dollar(o.grossProfit) + '</span></td><td>' + apyCell + '</td>' +
+        '<td>' + dataAgeCell + '</td>' +
+        '<td><input class="qty-input" type="number" id="qty-' + o.arbId + '" value="' + o.executableQty + '" min="1" max="' + o.executableQty + '" /></td>' +
+        '<td><button class="btn btn-success btn-execute" data-arb-id="' + o.arbId + '" onclick="execute(\'' + o.arbId + '\')">确认下注</button><div class="exec-result" id="result-' + o.arbId + '"></div></td></tr>';
     }).join('');
   }
 
-  // ── 扫描 ──────────────────────────────────────────────────────────────────
+  // 扫描
   async function scan() {
-    const base = $('apiBase').value.replace(/\/$/, '');
-    const type = $('filterType').value;
-    const spread = $('filterSpread').value;
-    const maxDays = $('filterDays').value;
-
-    let url = `${base}/api/v1/arb/kalshi-polymarket`;
-    const params = new URLSearchParams();
+    var base = G('apiBase').value.replace(/\/$/, '');
+    var type = G('filterType').value;
+    var spread = G('filterSpread').value;
+    var maxDays = G('filterDays').value;
+    var url = base + '/api/v1/arb/kalshi-polymarket';
+    var params = new URLSearchParams();
     if (type) params.set('arb_type', type);
     if (spread) params.set('min_spread_pct', (parseFloat(spread) / 100).toString());
-    if ([...params].length) url += '?' + params.toString();
-
-    $('btnScan').disabled = true;
-    $('btnScan').innerHTML = '<span class="spinner"></span>扫描中…';
+    if (params.toString()) url += '?' + params.toString();
+    G('btnScan').disabled = true;
+    G('btnScan').innerHTML = '<span class="spinner"></span>扫描中...';
     setStatus('');
-
     try {
-      const res = await fetch(url);
-      const data = await res.json();
-
-      if (!res.ok) {
-        setStatus('扫描失败：' + (data.error ?? res.statusText), 'error');
-        return;
-      }
-
-      let opps = data.opportunities ?? [];
-
-      // 按到期天数过滤（daysToExpiry 为 null 表示无到期日，不过滤）
-      if (maxDays) {
-        const limit = parseFloat(maxDays);
-        opps = opps.filter(o => o.daysToExpiry != null && o.daysToExpiry <= limit);
-      }
-
+      var res = await fetch(url);
+      var data = await res.json();
+      if (!res.ok) { setStatus('扫描失败: ' + (data.error || res.statusText), 'error'); return; }
+      var opps = data.opportunities || [];
+      if (maxDays) { var limit = parseFloat(maxDays); opps = opps.filter(function(o) { return o.daysToExpiry != null && o.daysToExpiry <= limit; }); }
       opportunities = opps;
-      $('totalCount').textContent = opportunities.length;
-      $('ttlBar').style.display = '';
-      startCountdown(data.opportunity_ttl_sec ?? 60);
+      G('totalCount').textContent = opportunities.length;
+      G('ttlBar').style.display = '';
+      startCountdown(data.opportunity_ttl_sec || 60);
       renderTable(opportunities);
-      setStatus(`扫描完成，找到 ${opportunities.length} 条机会`, 'ok');
-    } catch (err) {
-      setStatus('请求失败：' + err.message, 'error');
-    } finally {
-      $('btnScan').disabled = false;
-      $('btnScan').textContent = '🔍 扫描套利机会';
-    }
+      setStatus('扫描完成，找到 ' + opportunities.length + ' 条机会', 'ok');
+    } catch (err) { setStatus('请求失败: ' + err.message, 'error'); }
+    finally { G('btnScan').disabled = false; G('btnScan').textContent = '扫描套利机会'; }
   }
 
-  // ── 执行下注 ──────────────────────────────────────────────────────────────
+  // 执行下注
   async function execute(arbId) {
-    const base = $('apiBase').value.replace(/\/$/, '');
-    const qtyInput = $(`qty-${arbId}`);
-    const qty = parseInt(qtyInput?.value ?? '0', 10);
-    const btn = document.querySelector(`[data-arb-id="${arbId}"]`);
-    const resultEl = $(`result-${arbId}`);
-
-    if (!qty || qty <= 0) {
-      resultEl.textContent = '请输入有效数量';
-      resultEl.className = 'exec-result fail';
-      return;
-    }
-
-    btn.disabled = true;
-    btn.innerHTML = '<span class="spinner"></span>下单中…';
-    resultEl.textContent = '';
-
+    var base = G('apiBase').value.replace(/\/$/, '');
+    var qtyInput = G('qty-' + arbId);
+    var qty = parseInt(qtyInput ? qtyInput.value : '0', 10);
+    var btn = document.querySelector('[data-arb-id="' + arbId + '"]');
+    var resultEl = G('result-' + arbId);
+    if (!qty || qty <= 0) { resultEl.textContent = '请输入有效数量'; resultEl.className = 'exec-result fail'; return; }
+    btn.disabled = true; btn.innerHTML = '<span class="spinner"></span>下单中...'; resultEl.textContent = '';
     try {
-      const res = await fetch(`${base}/api/v1/arb/kalshi-polymarket/${arbId}/execute`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ qty }),
-      });
-
-      const data = await res.json();
-
-      if (res.status === 404) {
-        resultEl.textContent = '❌ 机会不存在，请重新扫描';
-        resultEl.className = 'exec-result fail';
-        return;
-      }
-      if (res.status === 410) {
-        resultEl.textContent = '⏰ 已过期，请重新扫描';
-        resultEl.className = 'exec-result fail';
-        return;
-      }
-      if (res.status === 402) {
-        resultEl.textContent = '💸 ' + data.error;
-        resultEl.className = 'exec-result fail';
-        return;
-      }
-      if (!res.ok) {
-        resultEl.textContent = '❌ ' + (data.error ?? '下单失败');
-        resultEl.className = 'exec-result fail';
-        return;
-      }
-
-      // HTTP 200 — 可能全成功或部分失败
-      const bothOk = data.kalshi_success && data.polymarket_success;
-      const noneOk = !data.kalshi_success && !data.polymarket_success;
-
-      if (bothOk) {
-        resultEl.innerHTML = `✅ 双腿成功<br>Kalshi: ${data.kalshi_order_id}<br>Poly: ${data.polymarket_order_id}`;
-        resultEl.className = 'exec-result success';
-        btn.textContent = '✅ 已执行';
-      } else if (noneOk) {
-        resultEl.innerHTML = `❌ 双腿失败<br>K: ${data.kalshi_error ?? ''}<br>P: ${data.polymarket_error ?? ''}`;
-        resultEl.className = 'exec-result fail';
-        btn.disabled = false;
-        btn.textContent = '✅ 确认下注';
+      var res = await fetch(base + '/api/v1/arb/kalshi-polymarket/' + arbId + '/execute', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ qty: qty }) });
+      var data = await res.json();
+      if (res.status === 404) { resultEl.textContent = '机会不存在，请重新扫描'; resultEl.className = 'exec-result fail'; return; }
+      if (res.status === 410) { resultEl.textContent = '已过期，请重新扫描'; resultEl.className = 'exec-result fail'; return; }
+      if (res.status === 402) { resultEl.textContent = data.error; resultEl.className = 'exec-result fail'; return; }
+      if (!res.ok) { resultEl.textContent = (data.error || '下单失败'); resultEl.className = 'exec-result fail'; return; }
+      if (data.kalshi_success && data.polymarket_success) {
+        resultEl.innerHTML = '双腿成功<br>K: ' + data.kalshi_order_id + '<br>P: ' + data.polymarket_order_id;
+        resultEl.className = 'exec-result success'; btn.textContent = '已执行';
+      } else if (!data.kalshi_success && !data.polymarket_success) {
+        resultEl.innerHTML = '双腿失败<br>K: ' + (data.kalshi_error||'') + '<br>P: ' + (data.polymarket_error||'');
+        resultEl.className = 'exec-result fail'; btn.disabled = false; btn.textContent = '确认下注';
       } else {
-        // 部分成功
-        const kLine = data.kalshi_success ? `✅ Kalshi: ${data.kalshi_order_id}` : `❌ Kalshi: ${data.kalshi_error}`;
-        const pLine = data.polymarket_success ? `✅ Poly: ${data.polymarket_order_id}` : `❌ Poly: ${data.polymarket_error}`;
-        resultEl.innerHTML = `⚠️ 部分成功<br>${kLine}<br>${pLine}`;
-        resultEl.className = 'exec-result partial';
-        btn.textContent = '⚠️ 部分成功';
+        resultEl.innerHTML = '部分成功<br>' + (data.kalshi_success ? 'K: '+data.kalshi_order_id : 'K失败: '+data.kalshi_error) + '<br>' + (data.polymarket_success ? 'P: '+data.polymarket_order_id : 'P失败: '+data.polymarket_error);
+        resultEl.className = 'exec-result partial'; btn.textContent = '部分成功';
       }
-    } catch (err) {
-      resultEl.textContent = '❌ 请求失败：' + err.message;
-      resultEl.className = 'exec-result fail';
-      btn.disabled = false;
-      btn.textContent = '✅ 确认下注';
-    }
+    } catch (err) { resultEl.textContent = '请求失败: ' + err.message; resultEl.className = 'exec-result fail'; btn.disabled = false; btn.textContent = '确认下注'; }
   }
 
-  // ── 绑定事件 ──────────────────────────────────────────────────────────────
-  $('btnScan').addEventListener('click', scan);
+  G('btnScan').addEventListener('click', scan);
+
+  // ── 数据库套利 ────────────────────────────────────────────────────────
+  var dbLoaded = false;
+  var dbCursor = null;
+  var dbPage = 1;
+
+  function setDbStatus(msg, type) { var el = G('dbStatus'); el.textContent = msg; el.className = type || ''; }
+
+  function renderDbTable(arbs) {
+    var tbody = G('dbBody');
+    if (!arbs.length) { tbody.innerHTML = '<tr><td colspan="16" class="empty">暂无数据</td></tr>'; return; }
+    tbody.innerHTML = arbs.map(function(a, i) {
+      var idx = (dbPage - 1) * 20 + i + 1;
+      var typeBadge = '<span class="badge badge-' + (a.arb_type||'').toLowerCase() + '">' + a.arb_type + '</span>';
+      var conf = a.mapping_confidence != null ? (a.mapping_confidence * 100).toFixed(0) + '%' : '—';
+      var expiry = a.expires_at ? new Date(a.expires_at).toLocaleDateString('zh-CN') : '—';
+      var leg1 = a.legs && a.legs[0]; var leg2 = a.legs && a.legs[1];
+      var updatedAgo = a.updated_at ? ageHtml(a.updated_at) : '—';
+      function legLink(leg) { return leg && leg.trade_url ? '<a href="'+leg.trade_url+'" target="_blank" style="color:#3b82f6;font-size:11px">'+leg.trade_url.split('/').pop()+'</a>' : '—'; }
+      function legPrice(leg) { return leg && leg.price_decimal != null ? String.fromCharCode(36) + leg.price_decimal.toFixed(2) : '—'; }
+      // 腿1 行（带 rowspan 的合并列）
+      var row1 = '<tr style="border-bottom:none">' +
+        '<td rowspan="2" style="color:#64748b;vertical-align:middle">' + idx + '</td>' +
+        '<td rowspan="2" style="vertical-align:middle">' + typeBadge + '</td>' +
+        '<td rowspan="2" style="max-width:180px;vertical-align:middle"><div style="font-weight:500">' + (a.market_title||'—') + '</div></td>' +
+        '<td rowspan="2" style="font-size:12px;color:#94a3b8;vertical-align:middle">' + (a.category||'—') + '</td>' +
+        '<td rowspan="2" style="font-size:12px;vertical-align:middle">' + expiry + '</td>' +
+        '<td style="color:#4ade80;font-weight:600">腿1</td>' +
+        '<td>' + legLink(leg1) + '</td>' +
+        '<td><span class="platform">' + (leg1?leg1.exchange:'—') + '</span></td>' +
+        '<td>' + (leg1?leg1.side:'—') + '</td>' +
+        '<td>' + legPrice(leg1) + '</td>' +
+        '<td>' + (leg1?leg1.depth_qty:'—') + '</td>' +
+        '<td rowspan="2" style="vertical-align:middle"><span class="spread">' + (a.gross_spread_pct != null ? pct(a.gross_spread_pct) : '—') + '</span></td>' +
+        '<td rowspan="2" style="vertical-align:middle">' + (a.executable_qty||'—') + '</td>' +
+        '<td rowspan="2" style="vertical-align:middle"><span class="profit">' + (a.gross_profit != null ? dollar(a.gross_profit) : '—') + '</span></td>' +
+        '<td rowspan="2" style="vertical-align:middle">' + conf + '</td>' +
+        '<td rowspan="2" style="vertical-align:middle"><div class="data-age">' + updatedAgo + '</div></td></tr>';
+      // 腿2 行
+      var row2 = '<tr>' +
+        '<td style="color:#a78bfa;font-weight:600">腿2</td>' +
+        '<td>' + legLink(leg2) + '</td>' +
+        '<td><span class="platform">' + (leg2?leg2.exchange:'—') + '</span></td>' +
+        '<td>' + (leg2?leg2.side:'—') + '</td>' +
+        '<td>' + legPrice(leg2) + '</td>' +
+        '<td>' + (leg2?leg2.depth_qty:'—') + '</td></tr>';
+      return row1 + row2;
+    }).join('');
+  }
+
+  async function loadDbArbs(cursor) {
+    var base = G('apiBase').value.replace(/\/$/, '');
+    var type = G('dbFilterType').value;
+    var category = G('dbFilterCategory').value;
+    var sort = G('dbSort').value;
+    var params = new URLSearchParams({ limit: '20', sort: sort });
+    if (type) params.set('arb_type', type);
+    if (category) params.set('category', category);
+    if (cursor) params.set('cursor', cursor);
+    G('btnDbLoad').disabled = true; G('btnDbLoad').innerHTML = '<span class="spinner"></span>加载中...'; setDbStatus('');
+    try {
+      var res = await fetch(base + '/api/v1/arb?' + params);
+      var data = await res.json();
+      if (!res.ok) { setDbStatus('加载失败: ' + (data.error || res.statusText), 'error'); return; }
+      var arbs = data.arbs || [];
+      dbLoaded = true; dbCursor = data.next_cursor;
+      renderDbTable(arbs);
+      // 统计卡片
+      var total = data.total || arbs.length;
+      G('statCount').textContent = total;
+      if (arbs.length > 0) {
+        var sumS = 0, best = 0, sumP = 0;
+        for (var a of arbs) { sumS += a.gross_spread_pct||0; sumP += a.gross_profit||0; if ((a.gross_spread_pct||0) > best) best = a.gross_spread_pct; }
+        G('statAvgSpread').textContent = pct(sumS / arbs.length);
+        G('statBestSpread').textContent = pct(best);
+        G('statTotalProfit').textContent = dollar(sumP);
+      }
+      var c = data.counts || {};
+      G('statCounts').innerHTML = '跨平台 <strong>' + (c.cross_platform||0) + '</strong> | 时间衰减 <strong>' + (c.time_decay||0) + '</strong> | 流动性 <strong>' + (c.liquidity_gap||0) + '</strong>';
+      if (data.meta && data.meta.last_scan_at) G('statLastScan').textContent = new Date(data.meta.last_scan_at).toLocaleString('zh-CN');
+      // 分页
+      G('dbPageNav').style.display = 'flex';
+      G('dbPageInfo').textContent = '第 ' + dbPage + ' 页';
+      G('dbTotal').textContent = '共 ' + (data.total||'?') + ' 条';
+      G('btnDbNext').disabled = !data.has_more;
+      G('btnDbPrev').disabled = dbPage <= 1;
+      setDbStatus('全部 ' + (c.all||total) + ' | 跨平台 ' + (c.cross_platform||0) + ' | 时间衰减 ' + (c.time_decay||0) + ' | 流动性 ' + (c.liquidity_gap||0), 'ok');
+    } catch (err) { setDbStatus('请求失败: ' + err.message, 'error'); }
+    finally { G('btnDbLoad').disabled = false; G('btnDbLoad').textContent = '刷新数据'; }
+  }
+
+  G('btnDbLoad').addEventListener('click', function() { dbPage = 1; dbCursor = null; loadDbArbs(); });
+  G('btnDbNext').addEventListener('click', function() { dbPage++; loadDbArbs(dbCursor); });
+  G('btnDbPrev').addEventListener('click', function() { if (dbPage > 1) { dbPage--; dbCursor = null; loadDbArbs(); } });
+  G('dbFilterType').addEventListener('change', function() { dbPage = 1; dbCursor = null; loadDbArbs(); });
+  G('dbFilterCategory').addEventListener('change', function() { dbPage = 1; dbCursor = null; loadDbArbs(); });
+  G('dbSort').addEventListener('change', function() { dbPage = 1; dbCursor = null; loadDbArbs(); });
 </script>
 </body>
 </html>
